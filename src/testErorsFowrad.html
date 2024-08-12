@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="/errorsForward.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch and Unhandled Rejection Example</title>
+</head>
+<body>
+  <h1>Fetch Example with Unhandled Rejection</h1>
+  <button id="fetchData">Fetch Data</button>
+  <div id="result"></div>
+  <div id="imagePlaceholder" class="flex justify-center items-center h-64">
+    <img src="https://via.placeholder.com/150" alt="Image Placeholder" class="object-cover" />
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/2toastify-js"></script>
+  <script>
+    document.getElementById('fetchData').addEventListener('click', () => {
+    });
+    fetchData();
+
+    function fetchData() {
+      fetch('https://api.example.com/tweets')
+        .then(response => {
+          return response.json();
+        })
+        .then(data => {
+          document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+        })
+
+    }
+    console.error('test');
+
+
+
+  </script>
+</body>
+
+</html>

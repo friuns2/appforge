@@ -1,0 +1,121 @@
+
+<html><head><base href="https://GPTCall.neocities.org/">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Monaco Editor Diff UI</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
+    <style>
+      body, html {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+        margin: 20px 0;
+      }
+      #container {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      #diffEditor {
+        flex-grow: 1;
+      }
+      #controls {
+        display: flex;
+        justify-content: center;
+        padding: 10px;
+        background-color: #f0f0f0;
+      }
+      button {
+        margin: 0 10px;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+    </style>
+    </head>
+    <body>
+    <h1>Monaco Editor Diff UI</h1>
+    <div id="container">
+      <div id="diffEditor"></div>
+    </div>
+    <div id="controls">
+      <button id="toggleInline">Toggle Inline/Side-by-Side</button>
+      <button id="toggleWordWrap">Toggle Word Wrap</button>
+    </div>
+    
+    <script>
+    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
+    
+    require(['vs/editor/editor.main'], function() {
+      const originalCode = `function greet(name) {
+      console.log("Hello, " + name + "!");
+    }
+    
+    greet("World");
+    
+    // This is a comment
+    let x = 10;
+    let y = 20;
+    let sum = x + y;
+    
+    console.log("The sum is: " + sum);`;
+    
+      const modifiedCode = `function greet(name) {
+      console.log(\`Hello, \${name}!\`);
+    }
+    
+    greet("Universe");
+    
+    // This is an updated comment
+    const x = 15;
+    const y = 25;
+    const sum = x + y;
+    
+    console.log(\`The sum is: \${sum}\`);`;
+    
+      const diffEditor = monaco.editor.createDiffEditor(document.getElementById('container'), {
+        automaticLayout: true,
+        originalEditable: true,
+        readOnly: false,
+        renderSideBySide: true,
+        theme: 'vs-dark'
+      });
+    
+      diffEditor.setModel({
+        original: monaco.editor.createModel(originalCode, 'javascript'),
+        modified: monaco.editor.createModel(modifiedCode, 'javascript')
+      });
+    
+      const toggleInlineButton = document.getElementById('toggleInline');
+      toggleInlineButton.addEventListener('click', function() {
+        const currentValue = diffEditor.getOption(monaco.editor.EditorOption.renderSideBySide);
+        diffEditor.updateOptions({
+          renderSideBySide: !currentValue
+        });
+      });
+    
+      const toggleWordWrapButton = document.getElementById('toggleWordWrap');
+      toggleWordWrapButton.addEventListener('click', function() {
+        const currentValue = diffEditor.getOption(monaco.editor.EditorOption.wordWrap);
+        diffEditor.updateOptions({
+          wordWrap: currentValue === 'off' ? 'on' : 'off'
+        });
+      });
+    });
+    </script>
+    </body>
+    </html>

@@ -1,0 +1,4 @@
+/.wrangler/
+/.git2/
+/node_modules/
+/localSettings.js

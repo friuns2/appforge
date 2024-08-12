@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Data Storage</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+</head>
+<body>
+    <div id="app">
+        <h2>User Data</h2>
+        <label>Name: <input v-model="userData.personal.name"></label><br>
+        <label>Email: <input v-model="userData.personal.email"></label><br>
+        <label>Theme: 
+            <select v-model="userData.preferences.theme">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
+        </label><br>
+        <label>
+            <input type="checkbox" v-model="userData.preferences.notifications.email"> Email Notifications
+        </label><br>
+        <label>
+            <input type="checkbox" v-model="userData.preferences.notifications.push"> Push Notifications
+        </label><br>
+        <h3>Favorites</h3>
+        <ul>
+            <li v-for="(u, index) in userData.favorites" :key="index">
+                <label>Name: <input v-model="u.name"></label><br>
+                <label>Email: <input v-model="u.email"></label><br>
+                <button @click="removeFavorite(index)">Remove</button>
+            </li>
+        </ul>
+        <label>Name: <input v-model="newFavorite.name" placeholder="Add new favorite name"></label><br>
+        <label>Email: <input v-model="newFavorite.email" placeholder="Add new favorite email"></label><br>
+        <button @click="addFavorite">Add</button>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                userData: {
+                    personal: {
+                        name: '11',
+                        email: '67'
+                    },
+                    preferences: {
+                        theme: 'light',
+                        notifications: {
+                            email: true,
+                            push: false
+                        }
+                    },
+                    favorites: []
+                },
+                newFavorite: {
+                    name: '',
+                    email: ''
+                }
+            },
+            methods: {
+                saveChanges(path, value) {
+                    let storedData = JSON.parse(localStorage.getItem('userData')) || {};
+                    let current = storedData;
+                    const keys = path.split('.');
+                    for (let i = 0; i < keys.length - 1; i++) {
+                        if (!current[keys[i]]) current[keys[i]] = {};
+                        current = current[keys[i]];
+                    }
+                    current[keys[keys.length - 1]] = value;
+                    localStorage.setItem('userData', JSON.stringify(storedData));
+                },
+                setupWatchers(obj, path = '') {
+                    for (const [key, value] of Object.entries(obj)) {
+                        const newPath = path ? `${path}.${key}` : key;
+                        if (Array.isArray(value)) {
+                            this.$watch(() => this.getNestedValue(this.userData, newPath), (newValue) => {
+                                this.saveChanges(newPath, newValue);
+                            }, { deep: true });
+                        } else if (typeof value === 'object' && value !== null) {
+                            this.setupWatchers(value, newPath);
+                        } else {
+                            this.$watch(() => this.getNestedValue(this.userData, newPath), (newValue) => {
+                                this.saveChanges(newPath, newValue);
+                            });
+                        }
+                    }
+                },
+                getNestedValue(obj, path) {
+                    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+                },
+                addFavorite() {
+                        this.userData.favorites.push({ name: this.newFavorite.name.trim(), email: this.newFavorite.email.trim() });
+                        this.newFavorite.name = '';
+                        this.newFavorite.email = '';
+                },
+                removeFavorite(index) {
+                    this.userData.favorites.splice(index, 1);
+                },
+                mergeDeep(target, source) {
+                    for (const key in source) {
+                        if (Array.isArray(source[key])) {
+                            target[key] = source[key].slice();
+                        } else if (typeof source[key] === 'object' && source[key] !== null) {
+                            if (!target[key]) Object.assign(target, { [key]: {} });
+                            this.mergeDeep(target[key], source[key]);
+                        } else {
+                            Object.assign(target, { [key]: source[key] });
+                        }
+                    }
+                    return target;
+                }
+            },
+            mounted() {
+                const savedData = JSON.parse(localStorage.getItem('userData')) || {};
+                this.userData = this.mergeDeep(this.userData, savedData);
+                this.setupWatchers(this.userData);
+            }
+        });
+    </script>
+</body>
+</html>

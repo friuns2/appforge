@@ -1,0 +1,23 @@
+{
+    "name": "GPTCall Dev",
+    "display": "fullscreen",
+    "start_url": "./index.html",
+    "short_name": "GPTCall dev",
+    "theme_color": "#6a1b9a",
+    "description": "Default Description",
+    "orientation": "portrait",
+    "background_color": "#6a1b9a",
+    "related_applications": [],
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "favicon.png",
+            "sizes": "512x512"
+        }
+    ],
+    "features": [
+        "Cross Platform",
+        "fast",
+        "simple"
+    ]
+}   

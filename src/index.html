@@ -1,0 +1,376 @@
+<html><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic App Forge</title>
+    <meta name="description" content="Cosmic App Forge: A powerful tool for building and customizing your own applications effortlessly. Create, design, and deploy apps with ease using our intuitive interface and robust features. Perfect for developers and non-developers alike.">
+    <link rel="icon" href="favicon.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.1.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs/loader.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.10/purify.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"> <!-- HTTP 1.1 -->
+    <meta http-equiv="Pragma" content="no-cache"> <!-- HTTP 1.0 -->
+    <meta http-equiv="Expires" content="0"> <!-- Proxies -->
+    <style>
+      @media (max-width: 640px) {
+        .fullscreen-button {
+          display: none;
+        }
+      }
+      .loader {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid #ffffff;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      html, body, #app {
+        height: 100%;
+      
+      }
+      .mobile-content {
+        height: calc(100% - 4rem);
+        overflow-y: auto;
+      }
+      #monaco-editor {
+        width: 100%;
+        height: 100%;
+      }
+      .editor-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+      .tabs-container {
+        flex-shrink: 0;
+      }
+      .monaco-container {
+        flex-grow: 1;
+        overflow: hidden;
+      }
+  
+ 
+    </style>
+    </head>
+    <body>
+      <div id="app" class="flex flex-col h-full bg-base-200">
+     <!-- Open the modal using ID.showModal() method -->
+
+        <dialog id="settings_modal" class="modal" onclick="if(event.target === this) this.close()">
+          <div class="modal-box">
+            <h3 class="text-lg font-bold">Settings</h3>
+            <recursive-settings :settings="settings" ></recursive-settings>
+            <div class="modal-action">
+              <form method="dialog">
+                <button class="btn">Close</button>
+              </form>
+            </div>
+          </div>
+        </dialog>
+        <!-- Navbar (hidden on mobile) -->
+        <div class="navbar bg-base-100 shadow-lg flex-wrap hidden lg:flex">
+          <div class="flex-1">
+            <a href="https://discord.gg/88fQT5Bgfe" target="_blank" class="btn btn-ghost normal-case text-xl">{{ document.title }}</a>
+          </div>
+          <template id="menu-template-1">
+            <ul tabindex="0" :style="{ display: 'flex', flexDirection: isMobile ? 'row' : 'row' }" :class="['dropdown-content mt-3 z-[1] p-2 bg-base-100 menu-sm menu', { 'w-52 shadow': isMobile }]">
+             
+              <li>
+                <a href="./" class="text-lg md:text-base"><i class="fas fa-comments"></i> New Chat </a>
+              </li>
+           
+              <li>
+                <details>
+                  <summary class="text-lg md:text-base">
+                    <i class="fas fa-comments"></i> <span class="truncate max-w-[111px]">Model</span>
+                  </summary>
+                  <ul :class="['right-0 p-2 bg-base-100 shadow', { 'absolute': !isMobile }]">
+                    <li v-for="model in settings.model.options" :key="model">
+                      <a class="text-lg md:text-base" @click="settings.model.selected=model" :class="{ 'font-bold': settings.model.selected === model }">{{ model }}</a>
+                    </li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary title="Select a System Prompt" class="text-lg md:text-base">
+                    <i class="fas fa-user"></i> Preset: {{ params.activeContact }}
+                  </summary>
+                  <ul :class="['right-0 p-2 bg-base-100 shadow', { 'absolute': !isMobile }]">
+                    <li v-for="(contact, index) in settings.contacts" :key="index">
+                      <a class="text-lg md:text-base" @click="params.activeContact=contact.name">{{ contact.name }}</a>
+                    </li>
+                  </ul>
+                </details>
+              </li>
+              <li><a class="text-lg md:text-base" @click="promptInstall()"><i class="fas fa-download"></i> Install...</a></li>
+              <li>
+                <a class="text-lg md:text-base" onclick="settings_modal.showModal()">
+                  <i class="fas fa-cog"></i> Settings
+                </a>
+              </li>
+              <li>
+                <details>
+                  <summary class="text-lg md:text-base">
+                    <i class="fas fa-folder-open"></i> File         
+                  </summary>
+                  <ul :class="['right-0 p-2 bg-base-100 shadow', { 'absolute': !isMobile }]">
+                    <li><a class="text-lg md:text-base" onclick="OpenFile()">Open File</a></li>
+                    <li><a class="text-lg md:text-base" onclick="window.open('preview/' + chat.params.chatId + '/index.html', '_blank')">Open Preview</a></li>
+                    <li v-if="!isMobile"><a class="text-lg md:text-base" onclick="LoadFolder()">Open Folder</a></li>
+                    <li v-if="!isMobile"><a class="text-lg md:text-base" onclick="SaveFolder()">Save Folder</a></li>
+                    <li><a class="text-lg md:text-base hidden" onclick="OpenFromUrl()">Load from WebSim</a></li>
+                    <li><a class="text-lg md:text-base" @click="bookmarkChat()">Bookmark Chat</a></li>
+                    <li><a class="text-lg md:text-base" @click="messages=[]"> Clear Chat</a></li>
+                    <li>
+                      <a class="text-lg md:text-base" @click="ShareChat()">
+                        <i class="fas fa-share"></i> Share Project
+                      </a>
+                    </li>
+                    <li><a class="text-lg md:text-base" href="apps.html">Landing page</a></li>
+                    <li v-if="params.activeTab === 'preview' || !isMobile">
+                      <a class="text-lg md:text-base" @click="toggleEruda" class="flex items-center">
+                        <span class="font-semibold">Developer Console</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="text-lg md:text-base" href="https://discord.gg/88fQT5Bgfe" target="_blank">
+                        <i class="fab fa-discord"></i>
+                        <span>Bug Report</span>
+                      </a>
+                    </li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details :open="isMobile">
+                  <summary class="text-lg md:text-base">
+                    <i class="fas fa-history"></i> Recent Chats
+                  </summary>
+                  <ul :class="['right-0 p-2 bg-base-100 shadow', { 'absolute': !isMobile }]">
+                    <li v-for="chat in previousChats" :key="chat.id">
+                      <a class="text-lg md:text-base" @click="loadChat(chat.id)">
+                        <span class="font-bold"><span v-if="chat.id.startsWith('f')"> ★</span> {{ chat.title || 'Untitled Chat' }}</span>
+                        <span class="text-xs opacity-60">{{ new Date(chat.timestamp).toLocaleString() }}</span>
+                      </a>
+                    </li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <a class="text-lg md:text-base" @click="toggleTheme(!settings.isDarkTheme)">
+                  <i class="fas" :class="{ 'fa-sun': settings.isDarkTheme, 'fa-moon': !settings.isDarkTheme }"></i>                  
+                </a>
+              </li>
+            </ul>
+            
+            </div>
+          </template>
+
+        </div>
+
+        <!-- Main content area -->
+        <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+          <!-- Chat -->
+          <div :class="['flex', { 'hidden lg:flex': isMobile && params.activeTab !== 'chat', 'lg:w-1/2 h-full': !isMobile, 'mobile-content': isMobile }]">
+            <div class="fullscreen-button absolute right-0 m-4 z-10">
+              <button @click="toggleFullScreen('chat')">
+                <i class="fas fa-expand"></i>
+              </button>
+            </div>
+            <div class="flex flex-grow overflow-y-auto flex-col-reverse" id="chatMessages">             
+               <!-- input field container -->
+               <div class="bottom-0 left-0 right-0 p-4 transition-all duration-300 bg-base-2000" id="inputContainer" style="pointer-events: none;">
+                <div style="pointer-events: auto;">
+                  <div class="flex overflow-x-auto gap-2 mb-2">
+                    <button v-for="(suggestion, index) in contact.suggestions" :key="index"
+                      class="btn btn-sm btn-outline bg-base-300"
+                      @click="handleSuggestionClick(suggestion)">
+                      <span class="truncate" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"> {{ suggestion.name }} </span>
+                    </button>
+                  </div>
+                  <div class="join w-full">
+                    <textarea ref="messageInput" v-model="newMessage" :placeholder="'What app you want to create?'"
+                      class="textarea textarea-bordered join-item flex-grow"
+                      @keydown.enter.prevent="sendMessage()" rows="1"></textarea>                    
+                    <button v-if="!abortController" class="btn join-item" @click="sendMessage()">
+                      <i class="fas fa-paper-plane"></i>
+                    </button>
+                    <button v-else class="btn join-item" @click="stopProcessing()">
+                      <i class="fas fa-stop"></i>
+                    </button>
+                  <button  v-if="!abortController  && newMessage !== '' " class="btn join-item" @click="newMessage = ''">
+                    <i class="fas fa-eraser"></i>
+                  </button>
+                  </div>
+                </div>
+              </div>
+              <div v-if="abortController" class="flex items-center justify-center">
+                <div class="loader"></div>
+                <span class="ml-2">Processing...</span>
+              </div>
+              <!-- chat messages -->
+              <div class="p-4  flex flex-col-reverse">
+                <div v-for="(message, index) in messages.slice().reverse()" :key="index" :class="['chat', message.role === 'assistant' ? 'chat-end' : 'chat-start']" v-if="!message.hidden">
+                    <div class="chat-image avatar">
+                      <div class="w-10 rounded-full">
+                        <img v-if="message.role === 'assistant'" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT1DODTLlJPJ2PRmRmfmbWOiWR7uz42fcHQfQ&s" />  
+                        <img v-else src="https://randomuser.me/api/portraits/men/32.jpg" />
+                      </div>
+                    </div>
+                    <div class="chat-header flex justify-between">
+                      {{ message.role }}
+                      <time class="text-xs opacity-50">12:45</time>
+                    </div>
+                    <div class="chat-bubble">
+                      <div v-if="message.role === 'assistant'" class="tabs tabs-boxed mb-2">
+                        <a v-for="(variant, index) in message.variants" :key="index" 
+                           class="tab" :class="{ 'tab-active': message.activeVariant === index }" 
+                           @click="setActiveVariant(message, index)">
+                          Variant {{ index + 1 }}
+                        </a>
+                      </div>
+                      <div v-html="renderMessage(message.content)" class="overflow-hidden"></div>
+                      <div v-if="message.error" class="text-red-500 mt-2">
+                        {{ message.error }}
+                      </div>
+                    </div>
+                    <div class="chat-actions">
+                      <div class="dropdown" :class="message.role === 'assistant' ? 'dropdown-left dropdown-end' : 'dropdown-right dropdown-end'">
+                        <label tabindex="0" class="btn btn-ghost btn-xs">
+                          <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </label>
+                        <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-10" onclick="document.activeElement.blur();">
+                          <li><a @click="editMessage(message)">Edit</a></li>
+                          <li><a @click="deleteMessage(message)">Delete</a></li>
+                          <li v-if="message.role !== 'assistant'"><a @click="resendMessage(message)">Resend</a></li>
+                          <li v-else><a @click="continueMessage(message)">Continue</a></li>
+                          <li><a @click="copyMessage(message)">Copy</a></li>                          
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  
+              </div>
+              
+             
+              </div>
+          </div>
+    
+            <!-- Editor -->
+            <div :class="['lg:w-1/2 lg:flex lg:flex-col h-full', { 'hidden': isMobile && params.activeTab !== 'editor' && params.activeTab !== 'preview' }]">
+            <div class="fullscreen-button absolute right-0 m-4 z-10">
+              <button @click="toggleFullScreen('editor')">
+                <i class="fas fa-expand"></i>
+              </button>
+            </div>
+            <div :class="[
+              'lg:flex-1 ',
+              {
+                'hidden': isMobile && params.activeTab !== 'editor',
+                'mobile-content': isMobile
+              }
+            ]">
+            
+              <div class="editor-container">
+                <div class="tabs-container">
+                  <div class="tabs">
+                    <a v-for="(file, index) in editorFiles" :key="index" v-if="!file.hidden"
+                       :class="['tab tab-lifted', { 'tab-active': activeEditorTab === index }]"
+                       @click="setActiveEditorTab(index)"
+                       @dblclick="renameFile(index)">
+                      {{ file.name.replace('example', 'styles') }}
+                      <button @click.stop="closeFile(file)" class="close-btn m-1" aria-label="Close file">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button> 
+                    </a>
+                    <div class="dropdown">
+                      <label tabindex="0" class="btn btn-ghost btn-xs">
+                        <i class="fa-solid fa-plus"></i>
+                      </label>
+                      <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-10">
+                        <li><a @click="createNewFile()">New File</a></li>
+                        <li><a onclick="OpenFile()">Open File</a></li>
+                      <li v-for="(file, index) in editorFiles" :key="index" v-if="file.hidden">
+                        <a @click="file.hidden=false">{{ file.name }}</a>
+                      </li>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                </div>
+                <div class="monaco-container">
+                  <div id="monaco-editor"></div>
+                </div>
+              </div>
+          
+            </div>
+    
+            <!-- Preview -->
+            <div :class="[   'lg:flex-1 ',   {     'hidden': isMobile && params.activeTab !== 'preview',     'mobile-content': isMobile   } ]">
+            <div class="fullscreen-button absolute right-0 m-4 z-10">
+              <button @click="toggleFullScreen('preview')">
+                <i class="fas fa-expand"></i>
+              </button>
+            </div>
+              <div class="h-full overflow-auto ">
+                <iframe id="html-preview" style="width: 100%; height: 100%; border: none; " src="preview/iframe.html">
+                </iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+    
+        <!-- Mobile Navigation -->
+        <div class="btm-nav lg:hidden">
+          <button :class="{ active: params.activeTab === 'chat' }" @click="setActiveTab('chat')">
+            <i class="fas fa-comments"></i>
+            <span class="btm-nav-label">Chat</span>
+          </button>
+          <button :class="{ active: params.activeTab === 'editor' }" @click="setActiveTab('editor')">
+            <i class="fas fa-code"></i>
+            <span class="btm-nav-label">Editor</span>
+          </button>
+          <button :class="{ active: params.activeTab === 'preview' }" @click="setActiveTab('preview')">
+            <i class="fas fa-eye"></i>
+            <span class="btm-nav-label">Preview</span>
+          </button>
+          <div class="dropdown flex mt-1 dropdown-end dropdown-left">
+            <button class="flex flex-col items-center p-2 rounded-lg">
+              <i class="fas fa-bars" aria-hidden="true"></i>
+              <span class="btm-nav-label">Menu</span>
+            </button>
+            <div data-template="menu-template-1" aria-label="Menu options" class="dropdown-content mt-2 shadow-lg bg-base-100 rounded-lg"></div>
+          </div>
+        </div>
+      </div>
+      <script src="huggingFace.js"></script>
+      <script src="utils.js"></script>
+      <script src="syncDirectory.js"></script>
+      <script src="engineer.js"></script>
+      <script src="settings.js"></script>
+      <script src="../localSettings.js"></script>
+      <script src="settingsRenderer.js"></script>
+      <script src="publish.js"></script>
+      <script src="chatMore.js"></script>
+      <script src="index.js"></script>
+      
+   <script>
+      document.addEventListener('click', function(event) {
+        if(chat.isMobile)return;
+        document.querySelectorAll('details').forEach(detail => { detail.removeAttribute('open');});
+      });
+    </script>
+    </body>
+    </html>

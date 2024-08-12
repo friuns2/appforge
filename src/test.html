@@ -1,0 +1,216 @@
+
+<html><head><base href="https://websimcreationengine.ai/whiteboard-prototype-v4/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Whiteboard Prototyping App https://websim.ai/c/0LwH9rGixzdjzCVtH</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/interact.js/1.10.17/interact.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.1.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {},
+        },
+        daisyui: {
+          themes: ["light"],
+        },
+      }
+    </script>
+    <style>
+      .component {
+        position: absolute;
+        background-color: white;
+        padding: 10px;
+        cursor: move;
+        user-select: none;
+        min-width: 50px;
+        min-height: 30px;
+      }
+      .component.selected {
+        border: 2px solid #3b82f6;
+      }
+     
+      .draggable-item {
+        cursor: move;
+      }
+      .dropdown-open .dropdown-content {
+        display: block;
+      }
+    </style>
+    </head>
+    <body class="bg-gray-100">
+      <div class="fixed top-4 left-4 z-50">
+        <div class="dropdown dropdown-right" id="componentDropdown">
+          <label tabindex="0" class="btn m-1">Components</label>
+          <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+            <li><a class="draggable-item" draggable="true" data-type="button">Button</a></li>
+            <li><a class="draggable-item" draggable="true" data-type="input">Input Field</a></li>
+            <li><a class="draggable-item" draggable="true" data-type="header">Header</a></li>
+            <li><a class="draggable-item" draggable="true" data-type="checkbox">Checkbox</a></li>
+            <li><a class="draggable-item" draggable="true" data-type="radio">Radio Button</a></li>
+            <li><a class="draggable-item" draggable="true" data-type="select">Select Dropdown</a></li>
+            <li><a class="draggable-item" draggable="true" data-type="image">Image Placeholder</a></li>
+            <li><a class="draggable-item" draggable="true" data-type="card">Card</a></li>
+          </ul>
+        </div>
+      </div>
+      <div id="canvas" class="w-full h-screen"></div>
+    
+    <script>
+    const canvas = document.getElementById('canvas');
+    const draggableItems = document.querySelectorAll('.draggable-item');
+    const dropdown = document.getElementById('componentDropdown');
+    let selectedComponent = null;
+    let draggedItem = null;
+    
+    draggableItems.forEach(item => {
+      item.addEventListener('dragstart', (e) => {
+        draggedItem = e.target;
+        e.dataTransfer.setData('text/plain', e.target.getAttribute('data-type'));
+        setTimeout(() => {
+          dropdown.classList.remove('dropdown-open');
+        }, 0);
+      });
+    });
+    
+    canvas.addEventListener('dragover', (e) => {
+      e.preventDefault();
+    });
+    
+    canvas.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const type = e.dataTransfer.getData('text');
+      createComponent(type, e.clientX, e.clientY);
+    });
+    
+    function createComponent(type, x, y) {
+      const component = document.createElement('div');
+      component.className = 'component';
+      component.style.left = `${x}px`;
+      component.style.top = `${y}px`;
+      
+      switch(type) {
+        case 'button':
+          component.innerHTML = '<button class="btn btn-primary w-full h-full">Button</button>';
+          break;
+        case 'input':
+          component.innerHTML = '<textarea placeholder="Input field" class="textarea textarea-bordered w-full h-full"></textarea>';
+          break;
+        case 'header':
+          component.innerHTML = '<h2 class="text-2xl font-bold w-full h-full">Header</h2>';
+          break;
+        case 'checkbox':
+          component.innerHTML = '<label class="label cursor-pointer w-full"><input type="checkbox" class="checkbox" /><span class="label-text ml-2">Checkbox</span></label>';
+          break;
+        case 'radio':
+          component.innerHTML = '<label class="label cursor-pointer w-full"><input type="radio" name="radio-1" class="radio" /><span class="label-text ml-2">Radio Button</span></label>';
+          break;
+        case 'select':
+          component.innerHTML = '<select class="select select-bordered w-full"><option disabled selected>Select option</option><option>Option 1</option><option>Option 2</option></select>';
+          break;
+        case 'image':
+          component.innerHTML = '<div class="bg-gray-300 flex items-center justify-center w-full h-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></div>';
+          break;
+        case 'card':
+          component.innerHTML = '<div class="card w-full h-full bg-white shadow-xl"><figure class="h-full"><img src="https://picsum.photos/400/200" alt="Placeholder" class="object-cover h-full w-full" /></figure><div class="card-body h-full"><h2 class="card-title">Card Title</h2><p>Card content goes here.</p></div></div>';
+          break;
+      }
+      
+      canvas.appendChild(component);
+      makeComponentDraggable(component);
+      makeComponentResizable(component);
+      makeComponentSelectable(component);
+    }
+    
+    function makeComponentDraggable(element) {
+      interact(element)
+        .draggable({
+          inertia: true,
+          modifiers: [
+            interact.modifiers.restrictRect({
+              restriction: 'parent',
+              endOnly: true
+            })
+          ],
+          autoScroll: true,
+          listeners: {
+            move: dragMoveListener,
+          }
+        });
+    }
+    
+    function dragMoveListener(event) {
+      const target = event.target;
+      const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+      const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+    
+      target.style.transform = `translate(${x}px, ${y}px)`;
+      target.setAttribute('data-x', x);
+      target.setAttribute('data-y', y);
+    }
+    
+    function makeComponentResizable(element) {
+      interact(element)
+        .resizable({
+          edges: { bottom: true, right: true },
+          listeners: {
+            move: resizeMoveListener
+          },
+          modifiers: [
+            interact.modifiers.restrictSize({
+              min: { width: 50, height: 30 }
+            })
+          ],
+        });
+    }
+    
+    function resizeMoveListener(event) {
+      const target = event.target;
+      let x = parseFloat(target.getAttribute('data-x')) || 0;
+      let y = parseFloat(target.getAttribute('data-y')) || 0;
+    
+      target.style.width = `${event.rect.width}px`;
+      target.style.height = `${event.rect.height}px`;
+    
+      x += event.deltaRect.left;
+      y += event.deltaRect.top;
+    
+      target.style.transform = `translate(${x}px, ${y}px)`;
+    
+      target.setAttribute('data-x', x);
+      target.setAttribute('data-y', y);
+    }
+    
+    function makeComponentSelectable(element) {
+      element.addEventListener('mousedown', (e) => {
+        if (selectedComponent) {
+          selectedComponent.classList.remove('selected');
+        }
+        selectedComponent = element;
+        element.classList.add('selected');
+        e.stopPropagation();
+      });
+    }
+    
+    canvas.addEventListener('mousedown', () => {
+      if (selectedComponent) {
+        selectedComponent.classList.remove('selected');
+        selectedComponent = null;
+      }
+    });
+    
+    // Toggle dropdown
+    dropdown.addEventListener('click', (e) => {
+      if (e.target.classList.contains('btn')) {
+        dropdown.classList.toggle('dropdown-open');
+      }
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!dropdown.contains(e.target)) {
+        dropdown.classList.remove('dropdown-open');
+      }
+    });
+    </script>
+    </body></html>

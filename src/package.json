@@ -1,0 +1,16 @@
+{
+  "name": "aidarknet",
+  "version": "0.0.0",
+  "devDependencies": {
+    "wrangler": "3.51.2"
+  },
+  "private": true,
+  "dependencies": {
+    "@huggingface/inference": "^2.8.0"
+  },
+  "scripts": {
+    "build": "xcopy /E /I /Y ./ dist /EXCLUDE:.gitignore && wrangler pages deploy ./dist",
+    "start": " npx http-server ./ -p 8080 -c-1 --cors --no-cache",
+    "startssl": "npx http-server -S -C ../server.cert -K ../server.key"
+  }
+}

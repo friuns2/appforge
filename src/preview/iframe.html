@@ -1,0 +1,36 @@
+<html>
+
+<head>
+    <link rel="manifest" href="manifest.json">  
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.51.3/dist/full.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #000000;
+            color: white;
+        }
+    </style>
+    <script type='module'>
+        
+        window.addEventListener('message', (event) => {
+            const { type, value } = event.data;
+            if (type === 'html') {
+                document.documentElement.innerHTML = value;
+            }
+        });
+        function preventFileDrop(event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        // Prevent file drops within the iframe
+        document.addEventListener('dragover', preventFileDrop);
+        document.addEventListener('drop', preventFileDrop);
+    </script>
+    
+</head>
+
+<body></body>
+
+</html>

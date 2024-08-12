@@ -1,0 +1,388 @@
+
+<html><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic App Forge | Unleash Your Digital Creations</title>
+    <meta name="description" content="Cosmic App Forge: A powerful tool for building and customizing your own applications effortlessly. Create, design, and deploy apps with ease using our intuitive interface and robust features. Perfect for developers and non-developers alike.">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.1.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@2.7.14/dist/vue.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollToPlugin.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" rel="stylesheet" />
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+      :root {
+        --primary-gradient: linear-gradient(135deg, #00c6ff, #0072ff);
+        --secondary-gradient: linear-gradient(135deg, #ff00cc, #333399);
+        --tertiary-gradient: linear-gradient(135deg, #ff416c, #ff4b2b);
+      }
+
+      body {
+        font-family: 'Space Grotesk', sans-serif;
+        background: #0f0f1e;
+        color: #e0e0ff;
+        overflow-x: hidden;
+      }
+      .cosmic-btn {
+    transition: all 0.3s;
+  }
+
+  .cosmic-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(0, 198, 255, 0.8);
+  }
+
+   
+
+      @keyframes cosmic-pulse {
+        0% { opacity: 0.5; }
+        50% { opacity: 0.8; }
+        100% { opacity: 0.5; }
+      }
+
+      .navbar {
+        background: rgba(15, 15, 30, 0.8);
+        backdrop-filter: blur(10px);
+      }
+
+      .hero {
+        background: var(--primary-gradient);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn {
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+      }
+
+      .btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.2);
+        transition: all 0.3s;
+        z-index: -1;
+      }
+
+      .btn:hover::before {
+        left: 100%;
+      }
+
+      .card {
+        background: rgba(30, 30, 50, 0.6);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .parallax-container {
+        height: 300px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .parallax-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: var(--secondary-gradient);
+        transform: translateZ(-1px) scale(2);
+      }
+      .cosmic-card::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #ff00cc, #333399, #00c6ff, #0072ff);
+    z-index: -1;
+    filter: blur(10px);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .cosmic-card:hover::before {
+    opacity: 1;
+  }
+      .parallax-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: white;
+      }
+
+      [v-cloak] { display: none; }
+    </style>
+    </head>
+    <body>
+      <canvas id="starfield2" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none;"></canvas>
+
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+      <script>
+          let scene, camera, renderer, stars;
+
+          function init() {
+              scene = new THREE.Scene();
+              camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+              renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('starfield'), alpha: true });
+              renderer.setSize(window.innerWidth, window.innerHeight);
+              camera.position.z = 5;
+
+              const starGeometry = new THREE.BufferGeometry();
+              const starCount = 1000;
+              const positions = new Float32Array(starCount * 3);
+              for (let i = 0; i < starCount; i++) {
+                  positions[i * 3] = (Math.random() - 0.5) * 1000; // x
+                  positions[i * 3 + 1] = (Math.random() - 0.5) * 1000; // y
+                  positions[i * 3 + 2] = (Math.random() - 0.5) * 1000; // z
+              }
+              starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+              const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.5 });
+              stars = new THREE.Points(starGeometry, starMaterial);
+              scene.add(stars);
+
+              animate();
+          }
+
+          function animate() {
+              stars.rotation.x += 0.0005;
+              stars.rotation.y += 0.0005;
+              renderer.render(scene, camera);
+              requestAnimationFrame(animate);
+          }
+
+          window.addEventListener('resize', () => {
+              camera.aspect = window.innerWidth / window.innerHeight;
+              camera.updateProjectionMatrix();
+              renderer.setSize(window.innerWidth, window.innerHeight);
+          });
+
+          init();
+      </script>
+    <div id="app" v-cloak>
+      <div class="navbar sticky top-0 z-50">
+        
+        <div class="flex-1">
+          <a class="btn btn-ghost normal-case text-xl">Cosmic App Forge</a>
+        </div>
+        <div class="flex-none">
+          <button class="btn btn-square btn-ghost" @click="toggleTheme">
+            <i class="fas fa-ellipsis-h"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="hero min-h-screen">
+        <div style="z-index: 2;" class="hero-content text-center">
+          <div  class="max-w-md">
+            <h1  class="text-5xl font-bold mb-8 cosmic-title">Welcome to Cosmic App Forge</h1>
+            <p class="py-6 text-lg">Forge your digital dreams into reality. Create, explore, and revolutionize the app universe.</p>
+            <button  class="btn btn-primary btn-lg" @click="gsap.to(window, {duration: 1, scrollTo: '#app-list', ease: 'power2.inOut'});">Explore the Cosmos</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-r from-purple-900 to-indigo-900 p-8 sticky bottom-55" id="app-list" style="z-index: 2;">
+        <div class="container mx-auto" >
+          <h2 class="text-3xl font-bold mb-6 text-center"><br>Craft Your Celestial Creation</h2>
+          <div class="flex flex-wrap gap-6 items-center justify-center">
+            <button class="btn btn-secondary btn-lg " @click="openCreator(0)">
+              <i class="fas fa-globe-americas mr-2"></i>
+              Website
+            </button>
+            <button class="btn btn-accent btn-lg " @click="openCreator(1)">
+              <i class="fas fa-mobile-alt mr-2"></i>
+              App
+            </button>
+            <button class="btn btn-primary btn-lg " @click="openCreator(2)">
+              <i class="fas fa-gamepad mr-2"></i>
+              Game
+            </button>
+          </div>
+          <transition name="fade">
+            <div v-if="showCreatorInput" class="mt-8 bg-black bg-opacity-30 p-6 rounded-lg max-w-2xl mx-auto">
+              <form @submit.prevent="createNew">
+                <input v-model="newCreationName" type="text" :placeholder="`Enter your ${creators[activeCreatorIndex].split(' ')[0]} idea`" 
+                       class="input input-bordered w-full mb-4"                   
+                       required />
+                <button type="submit" class="btn btn-success btn-block cosmic-btn">Forge Your Creation</button>
+              </form>
+         
+              <div class="mt-4">
+                <p class="text-sm font-semibold mb-2">Cosmic Inspirations:</p>
+                <div class="flex flex-wrap gap-2">
+                  <button v-for="suggestion in suggestions" :key="suggestion" 
+                          @click="applySuggestion(suggestion)"
+                          class="btn btn-sm btn-outline btn-primary">
+                    {{ suggestion }}
+                  </button>
+                </div>
+              </div>
+            </div>
+        
+          </transition>
+   
+        </div>
+      </div>
+      <div v-if="link" class="mt-4 text-center bg-gradient-to-r from-purple-900 to-indigo-900 p-8">
+        <p class="text-sm font-semibold mb-2">Your Creation Link:</p>
+        <a :href="link" class="btn btn-primary" target="_blank" rel="noopener noreferrer" style="background-image: var(--primary-gradient); padding: 12px 24px; border: none; border-radius: 8px; color: #fff; cursor: pointer;">View Your Creation <i class="fas fa-external-link-alt ml-2"></i></a>
+      </div>
+
+
+
+      <div class="parallax-container">
+        <div class="parallax-bg"></div>
+        <div class="parallax-content">
+          <h2 class="text-4xl font-bold mb-4">Discover Cosmic Creations</h2>
+          <p class="text-xl">Explore a universe of innovative apps and games</p>
+        </div>
+      </div>
+
+      <div class="container mx-auto p-8" >
+        <h2 class="text-3xl font-bold mb-8 text-center">Featured Constellations</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div v-for="app in apps" :key="app.id" class="card cosmic-card">
+            <figure><img :src="app.image" :alt="app.name" class="w-full h-48 object-cover"/></figure>
+            <div class="card-body">
+              <h2 class="card-title text-2xl">{{ app.name }}</h2>
+              <p class="text-gray-300">{{ app.description }}</p>
+              <div class="card-actions justify-end mt-4">
+                <button class="btn btn-primary cosmic-btn" @click="openApp(app)">Launch</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="footer footer-center p-8 bg-base-300 text-base-content">
+        <div>
+          <p class="text-lg">Crafted with cosmic energy by Cosmic App Forge</p>
+          <p class="text-sm mt-2">Copyright © 2024 AiDark - All rights reserved</p>
+        </div>
+      </footer>
+    </div>
+    
+    <script>
+    new Vue({
+      el: '#app',
+      data: {
+        apps: [
+          { id: 1, name: "Nebula Weather", description: "Forecast the cosmic climate of any exoplanet", image: "https://picsum.photos/seed/weather/300/200" },
+          { id: 2, name: "Quantum Todo", description: "Manage tasks across multiple dimensions", image: "https://picsum.photos/seed/todo/300/200" },
+          { id: 3, name: "Galactic Recipes", description: "Cook with ingredients from across the universe", image: "https://picsum.photos/seed/recipe/300/200" },
+          { id: 4, name: "Zero-G Fitness", description: "Stay fit in any gravitational field", image: "https://picsum.photos/seed/fitness/300/200" },
+          { id: 5, name: "Astral Meditation", description: "Find inner peace among the stars", image: "https://picsum.photos/seed/meditation/300/200" },
+          { id: 6, name: "Alien Linguist", description: "Master extraterrestrial languages", image: "https://picsum.photos/seed/language/300/200" },
+        ],
+        showCreatorInput: false,
+        link: '',
+        activeCreatorIndex: -1,
+        creators: ['Website', 'Web App', 'Web Game'],
+        newCreationName: '',
+      },
+      computed: {
+        suggestions: function() {
+          const suggestionMap = {
+            0: ['Cosmic Portfolio', 'Interstellar Blog', 'Galactic Marketplace', 'Nebula Network', 'Starship Showroom'],
+            1: ["google maps show helsinki",'random tweet generator','Quantum Organizer', 'Lunar Ledger', 'Telepathic Messenger', 'Gravity Gym', 'Stellar Kitchen'],
+            2: ['Astro Puzzler', 'Space Station Simulator', 'Cosmic Quiz', 'Galactic Conquest', 'Void Voyager'],
+          };
+          return suggestionMap[this.activeCreatorIndex] || [];
+        }
+      },
+      methods: {
+        toggleTheme: function() {
+          const html = document.querySelector('html')
+          html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark')
+        },
+        
+        openApp: function(app) {
+          alert(`Launching ${app.name} into the digital cosmos. This feature is not yet implemented in our current space-time continuum.`)
+        },
+        openCreator: function(index) {
+          this.activeCreatorIndex = index;
+          this.showCreatorInput = true;
+          this.newCreationName = '';
+          this.link = '';
+          window.scrollTo({top: document.querySelector('#app-list').offsetTop, behavior: 'instant'});
+        },
+        createNew: function() {
+       
+          const creatorType = this.creators[this.activeCreatorIndex];     
+          this.newCreationName += " " + creatorType;     
+          this.link = `./#prompt=${this.newCreationName}&activeContact=${creatorType}`;
+          window.open(this.link, '_blank')   
+          this.showCreatorInput = false;
+          this.newCreationName = ''
+        },
+        applySuggestion: function(suggestion) {
+          this.newCreationName = '';
+          let index = 0;
+          const typeEffect = () => {
+            if (index < suggestion.length) {
+              this.newCreationName += suggestion.charAt(index);
+              index++;
+              setTimeout(typeEffect, 30); // Adjust typing speed here
+            }
+          };
+          typeEffect();
+        }
+      },
+      mounted: function() {
+        gsap.registerPlugin(ScrollTrigger, ScrollToPlugin)
+
+        gsap.from('.cosmic-title', {
+          duration: 1,
+          y: 50,
+          opacity: 0,
+          ease: 'power3.out'
+        })
+
+        gsap.utils.toArray('.cosmic-card').forEach((card, i) => {
+          gsap.from(card, {
+            scrollTrigger: {
+              trigger: card,
+              start: 'top bottom-=100',
+              toggleActions: 'play none none reverse'
+            },
+            opacity: 0,
+            y: 50,
+            duration: 0.6,
+            delay: i * 0.1
+          })
+        })
+
+        gsap.to('.parallax-bg', {
+          scrollTrigger: {
+            trigger: '.parallax-container',
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: true
+          },
+          y: '50%'
+        })
+      }
+    })
+    </script>
+    </body>
+    </html>
