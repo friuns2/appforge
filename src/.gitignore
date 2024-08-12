@@ -1,7 +1,4 @@
-/examples/
-/examples2/
 /examples3/
-localSettings.js
 dist
 node_modules
 tmp
